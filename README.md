@@ -7,6 +7,7 @@ This container contains the basic configuration to send emails from other contai
 # docker run -d --name smtp exoplatform/smtp:latest
 ```
 * You can map ```/var/spool/postfix``` to a volume if you want the queue to be persistent
+* Logs are in the directory /var/log/mail and can be stored in a volume is needed
 
 Link the containers you want to send mail from with this container :
 ```

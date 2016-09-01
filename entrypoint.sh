@@ -17,4 +17,4 @@ postconf -x mydestination
 rsyslogd
 postfix start
 
-tail -F /var/log/mail.log
+tail -F /dev/null
