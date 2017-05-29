@@ -6,10 +6,10 @@ ARG POSTFIX_UID=1000
 RUN useradd -u ${POSTFIX_UID} -s /bin/false postfix && apt-get update && apt-get install -y postfix rsyslog
 
 COPY entrypoint.sh /
+COPY rsyslog.conf /etc/
 
-RUN chmod u+x entrypoint.sh && sed -i 's|/var/log/mail|/var/log/mail/mail|g' /etc/rsyslog.conf
+RUN chmod u+x entrypoint.sh
 
-ENTRYPOINT /entrypoint.sh
+ENTRYPOINT [ "/entrypoint.sh" ]
 
 EXPOSE 25
-
