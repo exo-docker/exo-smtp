@@ -1,5 +1,5 @@
 #FROM alpine:3.3
-FROM debian:8.0
+FROM ubuntu:18.04
 
 ARG POSTFIX_UID=1000
 
