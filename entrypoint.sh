@@ -52,7 +52,7 @@ EOL
         mkdir -p /etc/opendkim
         echo "*@${DKIM_DOMAIN} ${DKIM_SELECTOR}._domainkey.${DKIM_DOMAIN}" >>/etc/opendkim/SigningTable
         echo "${DKIM_SELECTOR}._domainkey.${DKIM_DOMAIN} ${DKIM_DOMAIN}:${DKIM_SELECTOR}:/etc/opendkim/keys/${DKIM_DOMAIN}/${DKIM_SELECTOR}.private" >>/etc/opendkim/KeyTable
-        echo "0.0.0.0" >>/etc/opendkim/TrustedHosts
+        [ -z "${DKIM_AUTHORIZED_HOSTS:-}" || echo ${DKIM_AUTHORIZED_HOSTS} | sed 's/,/\n/g' | xargs -L 1 >>/etc/opendkim/TrustedHosts
         echo "*.${DKIM_DOMAIN}" >>/etc/opendkim/TrustedHosts
         chown opendkim:opendkim /etc/opendkim/keys -R
         [ -e /var/spool/postfix/opendkim ] || mkdir /var/spool/postfix/opendkim
