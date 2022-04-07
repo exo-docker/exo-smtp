@@ -23,7 +23,7 @@ if [ ${DKIM_ENABLED:-false} == "true" ]; then
             exit 1
         fi
         cat >>/etc/opendkim.conf <<EOL
-Canonicalization   simple
+Canonicalization   relaxed/simple
 Mode               sv
 SubDomains         no
 AutoRestart         yes
@@ -61,7 +61,7 @@ EOL
         cat >>/etc/postfix/main.cf <<EOL
 # Milter configuration
 milter_default_action = accept
-milter_protocol = 6
+milter_protocol = 2
 smtpd_milters = inet:localhost:8891
 non_smtpd_milters = \$smtpd_milters
 EOL
