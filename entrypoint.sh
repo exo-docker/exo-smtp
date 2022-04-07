@@ -16,13 +16,13 @@ postconf -x mydestination
 [ "$DEBUG" == "true" ] && sed -i 's/smtpd$/smtpd -v/g' /etc/postfix/master.cf
 
 if [ ${DKIM_ENABLED:-false} == "true" ]; then
-    [ -z "${DKIM_SELECTOR:-}" ] && DKIM_SELECTOR='default'
-    if [ ! -f "/etc/opendkim/keys/${DKIM_DOMAIN}/${DKIM_SELECTOR}.private" ]; then
-        echo "Error! No such private DKIM KEY found /etc/opendkim/keys/${DKIM_DOMAIN}/${DKIM_SELECTOR}.private ! Aborting..."
-        exit 1
-    fi
-
-    cat >>/etc/opendkim.conf <<EOL
+    if [ ! -f /opt/__dkim_init ]; then
+        [ -z "${DKIM_SELECTOR:-}" ] && DKIM_SELECTOR='default'
+        if [ ! -f "/etc/opendkim/keys/${DKIM_DOMAIN}/${DKIM_SELECTOR}.private" ]; then
+            echo "Error! No such private DKIM KEY found /etc/opendkim/keys/${DKIM_DOMAIN}/${DKIM_SELECTOR}.private ! Aborting..."
+            exit 1
+        fi
+        cat >>/etc/opendkim.conf <<EOL
 Canonicalization   simple
 Mode               sv
 SubDomains         no
@@ -41,27 +41,35 @@ SigningTable       refile:/etc/opendkim/SigningTable
 # Hosts to ignore when verifying signatures
 ExternalIgnoreList  /etc/opendkim/TrustedHosts
 # A set of internal hosts whose mail should be signed
-InternalHosts       /etc/opendkim/TrustedHosts   
+InternalHosts       /etc/opendkim/TrustedHosts
+LogWhy                  yes
+Syslog                  yes
+SyslogSuccess           yes
 EOL
 
-    echo "Domain ${DKIM_DOMAIN}" >>/etc/opendkim.conf
-    echo 'RequireSafeKeys False' >>/etc/opendkim.conf
-    mkdir -p /etc/opendkim
-    echo "*@${DKIM_DOMAIN} ${DKIM_SELECTOR}._domainkey.${DKIM_DOMAIN}" >>/etc/opendkim/SigningTable
-    echo "${DKIM_SELECTOR}._domainkey.${DKIM_DOMAIN} ${DKIM_DOMAIN}:${DKIM_SELECTOR}:/etc/opendkim/keys/${DKIM_DOMAIN}/${DKIM_SELECTOR}.private" >>/etc/opendkim/KeyTable
-    echo "*.${DKIM_DOMAIN}" >>/etc/opendkim/TrustedHosts
-    chown opendkim:opendkim /etc/opendkim/keys -R
-    [ -e /var/spool/postfix/opendkim ] || mkdir /var/spool/postfix/opendkim
-    chown opendkim:postfix /var/spool/postfix/opendkim
-    sed -i 's|local:/run/opendkim/opendkim.sock|local:/var/spool/postfix/opendkim/opendkim.sock|g' /etc/opendkim.conf
-    cat >>/etc/postfix/main.cf <<EOL
+        echo "Domain ${DKIM_DOMAIN}" >>/etc/opendkim.conf
+        echo 'RequireSafeKeys False' >>/etc/opendkim.conf
+        mkdir -p /etc/opendkim
+        echo "*@${DKIM_DOMAIN} ${DKIM_SELECTOR}._domainkey.${DKIM_DOMAIN}" >>/etc/opendkim/SigningTable
+        echo "${DKIM_SELECTOR}._domainkey.${DKIM_DOMAIN} ${DKIM_DOMAIN}:${DKIM_SELECTOR}:/etc/opendkim/keys/${DKIM_DOMAIN}/${DKIM_SELECTOR}.private" >>/etc/opendkim/KeyTable
+        echo "0.0.0.0" >>/etc/opendkim/TrustedHosts
+        echo "*.${DKIM_DOMAIN}" >>/etc/opendkim/TrustedHosts
+        chown opendkim:opendkim /etc/opendkim/keys -R
+        [ -e /var/spool/postfix/opendkim ] || mkdir /var/spool/postfix/opendkim
+        chown opendkim:postfix /var/spool/postfix/opendkim
+        sed -i 's|local:/run/opendkim/opendkim.sock|local:/var/spool/postfix/opendkim/opendkim.sock|g' /etc/opendkim.conf
+        cat >>/etc/postfix/main.cf <<EOL
 # Milter configuration
 milter_default_action = accept
 milter_protocol = 6
 smtpd_milters = inet:localhost:8891
 non_smtpd_milters = \$smtpd_milters
 EOL
+        touch /opt/__dkim_init
+    fi
 fi
+
+opendkim -fx /etc/opendkim.conf &
 rsyslogd
 postfix start
 
