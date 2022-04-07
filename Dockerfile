@@ -2,7 +2,7 @@ FROM ubuntu:20.04
 
 ARG POSTFIX_UID=1000
 
-RUN useradd -u ${POSTFIX_UID} -s /bin/false postfix && apt-get update && apt-get install -y postfix rsyslog netcat opendkim
+RUN useradd -u ${POSTFIX_UID} -s /bin/false postfix && apt-get update && apt-get install -y postfix rsyslog netcat opendkim && gpasswd -a postfix opendkim
 
 COPY entrypoint.sh /
 COPY rsyslog.conf /etc/
