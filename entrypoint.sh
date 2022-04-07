@@ -67,9 +67,9 @@ non_smtpd_milters = \$smtpd_milters
 EOL
         touch /opt/__dkim_init
     fi
+    opendkim -fx /etc/opendkim.conf &
 fi
 
-opendkim -fx /etc/opendkim.conf &
 rsyslogd
 postfix start
 
