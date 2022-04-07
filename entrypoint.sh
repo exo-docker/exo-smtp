@@ -21,9 +21,16 @@ if [ ${DKIM_ENABLED:-false} == "true" ]; then
         echo "Error! No such private DKIM KEY found /etc/opendkim/keys/${DKIM_DOMAIN}/${DKIM_SELECTOR}.private ! Aborting..."
         exit 1
     fi
-    sed -i 's/#Mode v/Mode sv/g' /etc/opendkim.conf
 
     cat >>/etc/opendkim.conf <<EOL
+Canonicalization   simple
+Mode               sv
+SubDomains         no
+AutoRestart         yes
+AutoRestartRate     10/1M
+Background          yes
+DNSTimeout          5
+SignatureAlgorithm  rsa-sha256
 #OpenDKIM user
 # Remember to add user postfix to group opendkim
 UserID             opendkim
@@ -43,7 +50,7 @@ EOL
     echo "${DKIM_SELECTOR}._domainkey.${DKIM_DOMAIN} ${DKIM_DOMAIN}:${DKIM_SELECTOR}:/etc/opendkim/keys/${DKIM_DOMAIN}/${DKIM_SELECTOR}.private" >>/etc/opendkim/KeyTable
     echo "*.${DKIM_DOMAIN}" >>/etc/opendkim/TrustedHosts
     chown opendkim:opendkim /etc/opendkim/keys -R
-    mkdir /var/spool/postfix/opendkim
+    [ -e /var/spool/postfix/opendkim ] || mkdir /var/spool/postfix/opendkim
     chown opendkim:postfix /var/spool/postfix/opendkim
     sed -i 's|local:/run/opendkim/opendkim.sock|local:/var/spool/postfix/opendkim/opendkim.sock|g' /etc/opendkim.conf
     cat >>/etc/postfix/main.cf <<EOL
