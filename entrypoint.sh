@@ -31,6 +31,7 @@ AutoRestartRate     10/1M
 Background          yes
 DNSTimeout          5
 SignatureAlgorithm  rsa-sha256
+Socket inet:8891
 #OpenDKIM user
 # Remember to add user postfix to group opendkim
 UserID             opendkim
@@ -57,7 +58,7 @@ EOL
 # Milter configuration
 milter_default_action = accept
 milter_protocol = 6
-smtpd_milters = local:opendkim/opendkim.sock
+smtpd_milters = inet:localhost:8891
 non_smtpd_milters = \$smtpd_milters
 EOL
 fi
