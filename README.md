@@ -20,6 +20,17 @@ Link the containers you want to send mail from with this container :
 * ```RELAY_DOMAINS``` : if you want to specify the domains to relay emails to
 * ```DEBUG``` : Activate the postfix debug logs 
 
+## DKIM 
+
+You activate DKIM header by using the following environment variables:
+
+| Name                    | Type / Default value | Description   |
+|-------------------------|----------------------|---------------|
+| `DKIM_ENABLED`          | Boolean : `false`      | Enable DKIM Signature              |
+| `DKIM_DOMAIN`           | String :`<mandatory>`| DKIM Domain name              |
+| `DKIM_SELECTOR`         | String : `default`   | DKIM Selector              |
+| `DKIM_AUTHORIZED_HOSTS` | String : `<optional>`| DKIM authorized sender hosts (comma seperated list)           |
+
 ## TODO
 
 * Authentication
