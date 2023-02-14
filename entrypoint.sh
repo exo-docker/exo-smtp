@@ -14,6 +14,8 @@ postconf -F '*/*/chroot = n'
 
 postconf -x mydestination
 [ "$DEBUG" == "true" ] && sed -i 's/smtpd$/smtpd -v/g' /etc/postfix/master.cf
+# Enforce IPv4 
+sed -i 's/inet_protocols = all/inet_protocols = ipv4/g' /etc/postfix/main.cf
 
 if [ ${DKIM_ENABLED:-false} == "true" ]; then
     if [ ! -f /opt/__dkim_init ]; then
