@@ -1,6 +1,7 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ARG POSTFIX_UID=1000
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN useradd -u ${POSTFIX_UID} -s /bin/false postfix && apt-get update && apt-get install -y postfix rsyslog netcat opendkim && gpasswd -a postfix opendkim
 
