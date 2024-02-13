@@ -22,7 +22,7 @@ Link the containers you want to send mail from with this container :
 
 ## DKIM 
 
-You activate DKIM header by using the following environment variables:
+You can activate DKIM signature by using the following environment variables:
 
 | Name                    | Type / Default value | Description   |
 |-------------------------|----------------------|---------------|
@@ -31,6 +31,14 @@ You activate DKIM header by using the following environment variables:
 | `DKIM_SELECTOR`         | String : `default`   | DKIM Selector              |
 | `DKIM_AUTHORIZED_HOSTS` | String : `<optional>`| DKIM authorized sender hosts (comma seperated list)           |
 
-## TODO
 
 * Authentication
+
+You can activate authentication by using the following environment variables:
+
+| Name                    | Type / Default value  | Description   |
+|-------------------------|-----------------------|---------------|
+| `AUTH_ENABLED`          | Boolean : `false`     | Enable Authentication              |
+| `RELAY_HOST`            | String :`<mandatory>` | Relay Host             |
+| `AUTH_USER    `         | String : `<mandatory>`| Auth username             |
+| `AUTH_PASSWORD`         | String : `<optional>` | Auth password           |
