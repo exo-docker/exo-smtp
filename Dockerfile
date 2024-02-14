@@ -7,6 +7,7 @@ RUN useradd -u ${POSTFIX_UID} -s /bin/false postfix && apt-get update && apt-get
 
 COPY entrypoint.sh /
 COPY rsyslog.conf /etc/
+COPY opendkim.conf /etc/opendkim.conf
 
 RUN chmod u+x entrypoint.sh
 

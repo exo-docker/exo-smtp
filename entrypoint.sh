@@ -15,7 +15,7 @@ postconf -F '*/*/chroot = n'
 postconf -x mydestination
 [ "$DEBUG" == "true" ] && sed -i 's/smtpd$/smtpd -v/g' /etc/postfix/master.cf
 # Enforce IPv4 
-sed -i 's/inet_protocols = all/inet_protocols = ipv4/g' /etc/postfix/main.cf
+postconf -e "inet_protocols = ipv4"
 
 if [ ${DKIM_ENABLED:-false} == "true" ]; then
     if [ ! -f /opt/__dkim_init ]; then
@@ -24,31 +24,6 @@ if [ ${DKIM_ENABLED:-false} == "true" ]; then
             echo "Error! No such private DKIM KEY found /etc/opendkim/keys/${DKIM_DOMAIN}/${DKIM_SELECTOR}.private ! Aborting..."
             exit 1
         fi
-        cat >>/etc/opendkim.conf <<EOL
-Canonicalization   relaxed/simple
-Mode               sv
-SubDomains         no
-AutoRestart         yes
-AutoRestartRate     10/1M
-Background          yes
-DNSTimeout          5
-SignatureAlgorithm  rsa-sha256
-Socket inet:8891
-#OpenDKIM user
-# Remember to add user postfix to group opendkim
-UserID             opendkim
-# Map domains in From addresses to keys used to sign messages
-KeyTable           refile:/etc/opendkim/KeyTable
-SigningTable       refile:/etc/opendkim/SigningTable
-# Hosts to ignore when verifying signatures
-ExternalIgnoreList  /etc/opendkim/TrustedHosts
-# A set of internal hosts whose mail should be signed
-InternalHosts       /etc/opendkim/TrustedHosts
-LogWhy                  yes
-Syslog                  yes
-SyslogSuccess           yes
-EOL
-
         echo "Domain ${DKIM_DOMAIN}" >>/etc/opendkim.conf
         echo 'RequireSafeKeys False' >>/etc/opendkim.conf
         mkdir -p /etc/opendkim
@@ -60,16 +35,39 @@ EOL
         [ -e /var/spool/postfix/opendkim ] || mkdir /var/spool/postfix/opendkim
         chown opendkim:postfix /var/spool/postfix/opendkim
         sed -i 's|local:/run/opendkim/opendkim.sock|local:/var/spool/postfix/opendkim/opendkim.sock|g' /etc/opendkim.conf
-        cat >>/etc/postfix/main.cf <<EOL
-# Milter configuration
-milter_default_action = accept
-milter_protocol = 2
-smtpd_milters = inet:localhost:8891
-non_smtpd_milters = \$smtpd_milters
-EOL
+        # Milter configuration
+        postconf -e "milter_default_action = accept"
+        postconf -e "milter_protocol = 2"
+        postconf -e "smtpd_milters = inet:localhost:8891"
+        postconf -e "non_smtpd_milters = \$smtpd_milters"
         touch /opt/__dkim_init
     fi
     opendkim -fx /etc/opendkim.conf &
+fi
+
+if [ ${AUTH_ENABLED:-false} == "true" ]; then
+    if [ -z "${RELAY_HOST:-}" ]; then 
+        echo "Error! Relay Host must be provided"
+        exit 1 
+    fi
+    if [ -z "${AUTH_USER:-}" ]; then 
+        echo "Error! Username must be provided"
+        exit 1 
+    fi
+    if [ ! -f /opt/__auth_init ]; then
+        echo "${RELAY_HOST} ${AUTH_USER}:${AUTH_PASSWORD:-}" > /etc/postfix/sasl_passwd
+        chmod 600 /etc/postfix/sasl_passwd
+        postmap /etc/postfix/sasl_passwd
+        postconf -e "relayhost = [${RELAY_HOST}]"
+        # authentication
+        postconf -e "smtpd_sasl_auth_enable = yes"
+        postconf -e "smtp_sasl_auth_enable = yes"
+        postconf -e "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd"
+        postconf -e "smtp_sasl_security_options ="
+        postconf -e "smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt"
+        postconf -e "smtp_use_tls = yes"
+        touch /opt/__auth_init
+    fi
 fi
 
 rsyslogd
