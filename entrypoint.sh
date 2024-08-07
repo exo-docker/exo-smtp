@@ -70,6 +70,7 @@ if [ ${AUTH_ENABLED:-false} == "true" ]; then
     fi
 fi
 
+[ -f /var/run/rsyslogd.pid ] && rm -f /var/run/rsyslogd.pid
 rsyslogd
 postfix start
 
