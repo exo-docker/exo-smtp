@@ -29,7 +29,7 @@ if [ ${DKIM_ENABLED:-false} == "true" ]; then
         mkdir -p /etc/opendkim
         echo "*@${DKIM_DOMAIN} ${DKIM_SELECTOR}._domainkey.${DKIM_DOMAIN}" >>/etc/opendkim/SigningTable
         echo "${DKIM_SELECTOR}._domainkey.${DKIM_DOMAIN} ${DKIM_DOMAIN}:${DKIM_SELECTOR}:/etc/opendkim/keys/${DKIM_DOMAIN}/${DKIM_SELECTOR}.private" >>/etc/opendkim/KeyTable
-        [ -z "${DKIM_AUTHORIZED_HOSTS:-}" ] || echo ${DKIM_AUTHORIZED_HOSTS} | sed 's/,/\n/g' | xargs -L 1 >>/etc/opendkim/TrustedHosts
+        [ -z "${DKIM_AUTHORIZED_HOSTS:-}" ] || echo ${DKIM_AUTHORIZED_HOSTS} | sed 's/,/\n/g' | xargs -n 1 >>/etc/opendkim/TrustedHosts
         echo "*.${DKIM_DOMAIN}" >>/etc/opendkim/TrustedHosts
         chown opendkim:opendkim /etc/opendkim/keys -R
         [ -e /var/spool/postfix/opendkim ] || mkdir /var/spool/postfix/opendkim
@@ -69,6 +69,10 @@ if [ ${AUTH_ENABLED:-false} == "true" ]; then
         touch /opt/__auth_init
     fi
 fi
+
+# Fix permission of maildrop and public of existing postfix data
+[ -d /var/spool/postfix/public ] && chown :postdrop /var/spool/postfix/public
+[ -d /var/spool/postfix/maildrop ] && chown :postdrop /var/spool/postfix/maildrop
 
 [ -f /var/run/rsyslogd.pid ] && rm -f /var/run/rsyslogd.pid
 rsyslogd

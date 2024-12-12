@@ -1,9 +1,17 @@
-FROM ubuntu:22.04
+FROM alpine:3.21
 
 ARG POSTFIX_UID=1000
-ARG DEBIAN_FRONTEND=noninteractive
 
-RUN useradd -u ${POSTFIX_UID} -s /bin/false postfix && apt-get update && apt-get install -y postfix rsyslog netcat opendkim && gpasswd -a postfix opendkim
+RUN addgroup -g ${POSTFIX_UID} postfix
+RUN adduser -u ${POSTFIX_UID} -G postfix -s /bin/false --disabled-password postfix
+
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache postfix rsyslog netcat-openbsd opendkim shadow bash && gpasswd -a postfix opendkim
+
+RUN mkdir -p /var/spool/rsyslog && \
+    chown postfix:postdrop /var/spool/rsyslog && \
+    chmod 0755 /var/spool/rsyslog
 
 COPY entrypoint.sh /
 COPY rsyslog.conf /etc/
