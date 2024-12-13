@@ -70,6 +70,12 @@ if [ ${AUTH_ENABLED:-false} == "true" ]; then
     fi
 fi
 
+# Fix permission of maildrop and public of existing postfix data
+[ -d /var/spool/postfix ] && chown root:root /var/spool/postfix && chmod 755 /var/spool/postfix 
+
+mkdir -p /var/spool/postfix/dev
+ln -sf /dev/log /var/spool/postfix/dev/log
+
 [ -f /var/run/rsyslogd.pid ] && rm -f /var/run/rsyslogd.pid
 rsyslogd
 postfix start
