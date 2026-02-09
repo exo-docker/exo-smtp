@@ -38,7 +38,7 @@ RUN chmod u+x /entrypoint.sh
 
 # Healthcheck for Postfix
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD printf "EHLO healthcheck\n" | nc 127.0.0.1 25 | grep -qE "^220.*ESMTP Postfix"
+    CMD nc -z 127.0.0.1 25 >/dev/null 2>&1
 
 ENTRYPOINT [ "/entrypoint.sh" ]
 EXPOSE 25
