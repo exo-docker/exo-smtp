@@ -33,6 +33,7 @@ if [ "${DKIM_ENABLED:-false}" = "true" ]; then
         echo "*.${DKIM_DOMAIN}" >>/etc/opendkim/TrustedHosts
 
         chown -R opendkim:opendkim /etc/opendkim/keys
+        mkdir -p /var/spool/postfix/opendkim
         chown opendkim:postfix /var/spool/postfix/opendkim
 
         # Use TCP socket
