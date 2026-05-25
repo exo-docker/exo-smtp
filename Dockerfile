@@ -6,6 +6,7 @@ RUN apk add --no-cache \
         postfix \
         rsyslog \
         opendkim \
+        opendkim-utils \
         netcat-openbsd \
         ca-certificates \
         openssl \

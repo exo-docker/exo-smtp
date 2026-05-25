@@ -7,7 +7,7 @@ This container contains the basic configuration to send emails from other contai
 # docker run -d --name smtp exoplatform/smtp:latest
 ```
 * You can map ```/var/spool/postfix``` to a volume if you want the queue to be persistent
-* Logs are in the directory /var/log/mail and can be stored in a volume is needed
+* Logs are sent to **stdout** (visible via `docker logs`) AND to files in `/var/log/mail` (can be stored in a volume for persistence).
 
 Link the containers you want to send mail from with this container :
 ```
@@ -17,8 +17,12 @@ Link the containers you want to send mail from with this container :
 
 ### Available parameters
 
-* ```RELAY_DOMAINS``` : if you want to specify the domains to relay emails to
-* ```DEBUG``` : Activate the postfix debug logs 
+| Name | Type / Default value | Description |
+|------|----------------------|-------------|
+| `RELAY_DOMAINS` | String : `<optional>` | Domains to relay emails to (empty = all) |
+| `MYNETWORKS` | String : `127.0.0.0/8 172.16.0.0/12 192.168.0.0/16 10.0.0.0/8` | Authorized sender networks |
+| `DEBUG` | Boolean : `false` | Activate the postfix debug logs |
+| `PCONF_<param>` | Any | Set any Postfix parameter (e.g., `PCONF_message_size_limit=20480000`) |
 
 ## DKIM 
 
@@ -29,6 +33,7 @@ You can activate DKIM signature by using the following environment variables:
 | `DKIM_ENABLED`          | Boolean : `false`      | Enable DKIM Signature              |
 | `DKIM_DOMAIN`           | String :`<mandatory>`| DKIM Domain name              |
 | `DKIM_SELECTOR`         | String : `default`   | DKIM Selector              |
+| `DKIM_AUTOGEN`          | Boolean : `false`    | Automatically generate DKIM key if missing |
 | `DKIM_AUTHORIZED_HOSTS` | String : `<optional>`| DKIM authorized sender hosts (comma seperated list)           |
 
 
