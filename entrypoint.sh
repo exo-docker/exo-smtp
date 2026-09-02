@@ -5,6 +5,13 @@ DEBUG=${DEBUG-false}
 FQDN=$(hostname -f)
 RELAY_DOMAINS=${RELAY_DOMAINS:-} # Empty to relay all emails
 
+# --- Outbound throttling defaults (can be overridden via env) ---
+SMTP_DEST_CONCURRENCY=${SMTP_DEST_CONCURRENCY:-2}
+SMTP_DEST_RATE_DELAY=${SMTP_DEST_RATE_DELAY:-1s}
+MINIMAL_BACKOFF_TIME=${MINIMAL_BACKOFF_TIME:-300s}
+MAXIMAL_BACKOFF_TIME=${MAXIMAL_BACKOFF_TIME:-4000s}
+DEFAULT_PROCESS_LIMIT=${DEFAULT_PROCESS_LIMIT:-50}
+
 # Configure Postfix basics
 postconf -e myhostname="${FQDN}"
 postconf -e relay_domains="${RELAY_DOMAINS}"
@@ -69,6 +76,13 @@ if [ "${AUTH_ENABLED:-false}" = "true" ]; then
         touch /opt/__auth_init
     fi
 fi
+
+# --- Apply outbound throttling ---
+postconf -e "smtp_destination_concurrency_limit = ${SMTP_DEST_CONCURRENCY}"
+postconf -e "smtp_destination_rate_delay = ${SMTP_DEST_RATE_DELAY}"
+postconf -e "minimal_backoff_time = ${MINIMAL_BACKOFF_TIME}"
+postconf -e "maximal_backoff_time = ${MAXIMAL_BACKOFF_TIME}"
+postconf -e "default_process_limit = ${DEFAULT_PROCESS_LIMIT}"
 
 QUEUE_DIRS="active bounce corrupt deferred defer flush hold incoming maildrop pid private saved trace public"
 
