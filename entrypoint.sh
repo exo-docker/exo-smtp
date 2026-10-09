@@ -64,11 +64,29 @@ if [ "${AUTH_ENABLED:-false}" = "true" ]; then
         postconf -e "smtp_sasl_auth_enable = yes"
         postconf -e "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd"
         postconf -e "smtp_sasl_security_options ="
-        postconf -e "smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt"
-        postconf -e "smtp_use_tls = yes"
         touch /opt/__auth_init
     fi
 fi
+
+# --- Outbound TLS ---
+# none: no TLS | may: opportunistic | encrypt: mandatory | verify: mandatory + certificate check
+# Defaults to "encrypt" when relay authentication is enabled (credentials must not travel in clear text).
+if [ "${AUTH_ENABLED:-false}" = "true" ]; then
+    DEFAULT_TLS_LEVEL=encrypt
+else
+    DEFAULT_TLS_LEVEL=may
+fi
+SMTP_TLS_SECURITY_LEVEL=${SMTP_TLS_SECURITY_LEVEL:-$DEFAULT_TLS_LEVEL}
+case "$SMTP_TLS_SECURITY_LEVEL" in
+    none) postconf -e "smtp_tls_security_level =" ;;
+    may | encrypt | verify | secure) postconf -e "smtp_tls_security_level = ${SMTP_TLS_SECURITY_LEVEL}" ;;
+    *)
+        echo "Error! Invalid SMTP_TLS_SECURITY_LEVEL: ${SMTP_TLS_SECURITY_LEVEL} (none|may|encrypt|verify|secure)" >&2
+        exit 1
+        ;;
+esac
+postconf -e "smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt"
+postconf -e "smtp_tls_loglevel = ${SMTP_TLS_LOGLEVEL:-1}"
 
 QUEUE_DIRS="active bounce corrupt deferred defer flush hold incoming maildrop pid private saved trace public"
 
