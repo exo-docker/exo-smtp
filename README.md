@@ -42,3 +42,14 @@ You can activate authentication by using the following environment variables:
 | `RELAY_HOST`            | String :`<mandatory>` | Relay Host             |
 | `AUTH_USER    `         | String : `<mandatory>`| Auth username             |
 | `AUTH_PASSWORD`         | String : `<optional>` | Auth password           |
+
+## Outbound TLS (encryption in transit)
+
+Outgoing mail is encrypted with STARTTLS using the system CA bundle:
+
+| Name                      | Type / Default value                         | Description   |
+|---------------------------|----------------------------------------------|---------------|
+| `SMTP_TLS_SECURITY_LEVEL` | `none`, `may`, `encrypt`, `verify`, `secure` : `may` (`encrypt` if `AUTH_ENABLED=true`) | `may` = opportunistic, `encrypt` = mandatory TLS, `verify`/`secure` = mandatory TLS with certificate validation |
+| `SMTP_TLS_LOGLEVEL`       | Integer : `1`                                | Postfix TLS log verbosity (0-4) |
+
+Inbound connections from other containers are not encrypted.
