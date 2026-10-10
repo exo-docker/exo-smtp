@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [ master ]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: shellcheck
+        run: shellcheck -S warning entrypoint.sh healthcheck.sh tests/smoke.sh
+      - uses: hadolint/hadolint-action@v3.5.0
+        with:
+          dockerfile: Dockerfile
+          ignore: DL3018
+
+  build-test:
+    name: Build, smoke test and scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build image (not pushed)
+        run: docker build -t exo-smtp:test .
+      - name: Smoke test
+        run: ./tests/smoke.sh exo-smtp:test
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: exo-smtp:test
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
