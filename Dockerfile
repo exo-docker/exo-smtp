@@ -1,4 +1,4 @@
-FROM alpine:3.23
+FROM alpine:3.24
 
 LABEL org.opencontainers.image.title="exo-smtp" \
       org.opencontainers.image.description="Postfix SMTP relay with OpenDKIM, relay auth and TLS" \
